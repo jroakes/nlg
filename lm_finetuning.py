@@ -62,7 +62,13 @@ class TextDataset(Dataset):
 
         def tokenize_row(text):
             token_ids = tokenizer.convert_tokens_to_ids(tokenizer.tokenize(text))[:max_size]
-            return tokenizer.add_special_tokens_single_sentence(token_ids)
+            token_ids = tokenizer.add_special_tokens_single_sentence(token_ids)
+
+            if tokenizer.pad_token and len(token_ids) < max_size:
+                p_i = tokenizer.pad_token_id
+                token_ids = [token_ids[i] if i < len(token_ids) else p_i for i in range(max_size)]
+
+            return token_ids
 
 
         if os.path.exists(cached_features_file):
@@ -74,7 +80,7 @@ class TextDataset(Dataset):
 
             text_data = pd.read_csv(file_path, encoding="utf-8")['Text'].tolist()
 
-            self.examples = [tokenize_row(t) for t in text_data]
+            self.examples = [tokenize_row(t) for t in text_data if len(t)]
 
             logger.info("Saving features into cached file %s", cached_features_file)
             with open(cached_features_file, 'wb') as handle:
