@@ -62,12 +62,14 @@ class TextDataset(Dataset):
         tokenizer_type = tokenizer.__module__.split('.')[-1]
         cached_features_file = os.path.join(directory, f'cached_lm_{max_size}_{tokenizer_type}_{filename}')
 
-        def tokenize_row(text):
+        def convert_and_pad(text):
             token_ids = tokenizer.convert_tokens_to_ids(tokenizer.tokenize(text))[:max_size]
-            if 'pad_token' in tokenizer.special_tokens_map and len(token_ids) < max_size:
+            p_i = -1
+            if 'pad_token' in tokenizer.special_tokens_map:
                 token_ids = tokenizer.add_special_tokens_single_sentence(token_ids)
                 p_i = tokenizer.pad_token_id
-                token_ids = [token_ids[i] if i < len(token_ids) else p_i for i in range(max_size)]
+
+            token_ids = [token_ids[i] if i < len(token_ids) else p_i for i in range(max_size)]
             return token_ids
 
 
@@ -80,7 +82,7 @@ class TextDataset(Dataset):
 
             text_data = pd.read_csv(file_path, encoding="utf-8")['Text'].tolist()
 
-            self.examples = [tokenize_row(t) for t in text_data if len(t)]
+            self.examples = [convert_and_pad(t) for t in text_data if len(t)]
 
             logger.info("Saving features into cached file %s", cached_features_file)
             with open(cached_features_file, 'wb') as handle:
@@ -134,8 +136,7 @@ def train(args, train_dataset, model, tokenizer):
     args.train_batch_size = args.per_gpu_train_batch_size * max(1, args.n_gpu)
     train_sampler = RandomSampler(train_dataset) if args.local_rank == -1 else DistributedSampler(train_dataset)
 
-    collate_fn = default_collate if 'pad_token' in tokenizer.special_tokens_map else default_convert
-    train_dataloader = DataLoader(train_dataset, sampler=train_sampler, batch_size=args.train_batch_size, collate_fn=collate_fn)
+    train_dataloader = DataLoader(train_dataset, sampler=train_sampler, batch_size=args.train_batch_size)
 
     if args.max_steps > 0:
         t_total = args.max_steps
@@ -262,8 +263,7 @@ def evaluate(args, model, tokenizer, prefix=""):
     # Note that DistributedSampler samples randomly
     eval_sampler = SequentialSampler(eval_dataset) if args.local_rank == -1 else DistributedSampler(eval_dataset)
 
-    collate_fn = default_collate if 'pad_token' in tokenizer.special_tokens_map else default_convert
-    eval_dataloader = DataLoader(eval_dataset, sampler=eval_sampler, batch_size=args.eval_batch_size, collate_fn=collate_fn)
+    eval_dataloader = DataLoader(eval_dataset, sampler=eval_sampler, batch_size=args.eval_batch_size)
 
     # Eval!
     logger.info("***** Running evaluation {} *****".format(prefix))
