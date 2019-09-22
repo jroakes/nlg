@@ -63,12 +63,10 @@ class TextDataset(Dataset):
 
         def tokenize_row(text):
             token_ids = tokenizer.convert_tokens_to_ids(tokenizer.tokenize(text))[:max_size]
-            token_ids = tokenizer.add_special_tokens_single_sentence(token_ids)
-
             if 'pad_token' in tokenizer.special_tokens_map and len(token_ids) < max_size:
+                token_ids = tokenizer.add_special_tokens_single_sentence(token_ids)
                 p_i = tokenizer.pad_token_id
                 token_ids = [token_ids[i] if i < len(token_ids) else p_i for i in range(max_size)]
-
             return token_ids
 
 
