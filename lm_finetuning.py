@@ -59,7 +59,8 @@ class TextDataset(Dataset):
     def __init__(self, tokenizer, file_path='train', max_size=512):
         assert os.path.isfile(file_path)
         directory, filename = os.path.split(file_path)
-        cached_features_file = os.path.join(directory, f'cached_lm_{max_size}_{filename}')
+        tokenizer_type = tokenizer.__module__.split('.')[-1]
+        cached_features_file = os.path.join(directory, f'cached_lm_{max_size}_{tokenizer_type}_{filename}')
 
         def tokenize_row(text):
             token_ids = tokenizer.convert_tokens_to_ids(tokenizer.tokenize(text))[:max_size]
