@@ -32,7 +32,6 @@ import numpy as np
 import torch
 from torch.utils.data import DataLoader, Dataset, SequentialSampler, RandomSampler
 from torch.utils.data.distributed import DistributedSampler
-from torch.utils.data._utils.collate import default_collate, default_convert
 from tensorboardX import SummaryWriter
 from tqdm import tqdm, trange
 import pandas as pd
