@@ -187,9 +187,11 @@ def train(args, train_dataset, model, tokenizer):
         epoch_iterator = tqdm(train_dataloader, desc="Iteration", disable=args.local_rank not in [-1, 0], position=0, leave=True)
         for step, batch in enumerate(epoch_iterator):
             inputs, labels = mask_tokens(batch, tokenizer, args) if args.mlm else (batch, batch)
-            if 'pad_token' not in tokenizer.special_tokens_map:
+            if not args.mlm:
                 # Mask labels
                 labels[labels==0] = -1
+            print(inputs)
+            print(labels)
             inputs = inputs.to(args.device)
             labels = labels.to(args.device)
             model.train()
