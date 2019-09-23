@@ -186,6 +186,7 @@ def train(args, train_dataset, model, tokenizer):
     for _ in train_iterator:
         epoch_iterator = tqdm(train_dataloader, desc="Iteration", disable=args.local_rank not in [-1, 0], position=0, leave=True)
         for step, batch in enumerate(epoch_iterator):
+            print(batch)
             inputs, labels = mask_tokens(batch, tokenizer, args) if args.mlm else (batch, batch)
             if not args.mlm:
                 # Mask labels
