@@ -63,7 +63,7 @@ class TextDataset(Dataset):
 
         def convert_and_pad(text):
             token_ids = tokenizer.convert_tokens_to_ids(tokenizer.tokenize(text))[:max_size]
-            p_i = -1
+            p_i = 0
             if 'pad_token' in tokenizer.special_tokens_map:
                 token_ids = tokenizer.add_special_tokens_single_sentence(token_ids)
                 p_i = tokenizer.pad_token_id
@@ -187,6 +187,9 @@ def train(args, train_dataset, model, tokenizer):
         epoch_iterator = tqdm(train_dataloader, desc="Iteration", disable=args.local_rank not in [-1, 0], position=0, leave=True)
         for step, batch in enumerate(epoch_iterator):
             inputs, labels = mask_tokens(batch, tokenizer, args) if args.mlm else (batch, batch)
+            if 'pad_token' not in tokenizer.special_tokens_map:
+                # Mask labels
+                labels[labels==0] = -1
             inputs = inputs.to(args.device)
             labels = labels.to(args.device)
             model.train()
